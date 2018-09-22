@@ -1,0 +1,2 @@
+GIT SHA of repo <_NewProject>:
+cf0f4ccd5b94408cecabb962b20a4058a7897a9d
