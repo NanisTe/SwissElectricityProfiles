@@ -25,6 +25,7 @@ p_load("fields")
 p_load("R2HTML")
 p_load("viridis")
 p_load("scales")
+p_load("blogdown")
 
 
 

@@ -667,6 +667,9 @@ if (file.exists("./.Rdata")) { load("./.Rdata") }
   path.r.ver <- paste0("./local_package_library/", r.ver)
 
   # set local package library to current R.version
+  if(!dir.exists(path.r.ver)){
+    dir.create(path.r.ver,recursive = T)
+  }
   .libPaths(path.r.ver)
   
   # list packages in local package library
