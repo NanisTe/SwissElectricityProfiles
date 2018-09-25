@@ -127,7 +127,7 @@ for (Year in Years) {
   # Saving the plots individually in a hash file.
   # They can be 
   SG.plots[Year] <- dyg
-  print(dyg)
+  # print(dyg)
   
   # For standard export procedure
   ElDat.Plots[Year] <- dyg
