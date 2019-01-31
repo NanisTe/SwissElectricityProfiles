@@ -35,7 +35,7 @@ ui <- fluidPage(
       
       # Show a plot of the generated distribution
       mainPanel(
-         dygraphOutput("ElProfile")
+         dygraphOutput("ElProfile",height = "800")
       )
    )
 )
@@ -52,7 +52,7 @@ server <- function(input, output) {
   selYear["de"] <- "Wähle das Jahr"
   
   #Load data
-  load("./dygraphs_ElDatPlots.Rdata", envir = .GlobalEnv)
+  load("C:/GIT_clones/GHub_SwissElectricityProfilesOnline/SwissElectricityProfiles/dygraphs_ElDatPlots.Rdata", envir = .GlobalEnv)
   
   rv <- reactiveValues()
   rv$Lang <- selLang[["en"]]
@@ -72,7 +72,8 @@ server <- function(input, output) {
    output$uiLang <- renderUI({
      selectInput("uiLang",
                  "",
-                 c("en","de","fr","it")
+                 c("en","de","fr","it"),
+                 selected = "en"
                  )
    })
    output$uiYear <- renderUI({

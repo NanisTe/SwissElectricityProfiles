@@ -1,16 +1,26 @@
 ---
 title: "SWISSGRID DATA ANALYSIS + ELECTRICITY MARKET PLOTS"
-output: html_notebook
+output:
+   flexdashboard::flex_dashboard
+runtime: shiny
+params:
+    eval_optional: no
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
-
-# Prepare project
-```{r}
+```{r Load project instructions, include=TRUE,eval=FALSE}
 cat("\014") # clear console
 project.load() # load project
+```
+
+
+Report / Documentation / Code
+=====
+
+## Project Setup
+
+In the following the project setup 
+```{r global Load Data, include=TRUE, echo=TRUE}
+
 
 # source("./functions/OwnFunctions.R") # already loaded by .project.load
 
@@ -18,7 +28,7 @@ if (F) { .project.load.cache("raw") }
 if (T) { .project.load.cache("analysed")}
 
 # munge data
-if (F) { source("./munge/Munge.R",encoding = "UTF-8") }
+if (F) { source("./munge/Munge.R",encoding = "UTF-8",local = TRUE) }
 
 hash <- hash::hash
 
@@ -29,7 +39,7 @@ hash <- hash::hash
 EZ = "Europe/Zurich"
 
 
-
+# Has to be loaded after ElDat_ohneKKW dataset is available
 getElDatPV <- function(Anteil) {
   ElDat_ohneKKW %>% 
     left_join(df.PV.Pot.CH.final, by = "Datetime") %>% 
@@ -39,12 +49,39 @@ getElDatPV <- function(Anteil) {
     ElDatPlot_Prepare()
 }
 
+
 ```
 
-# Data preparation
 
-# Plotting Section
-```{r}
+
+
+
+
+
+Page 1
+=====
+Row
+------------------
+This section explains calculatin of the Swissgrid electrictiy profile data.
+
+<!-- This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code.  -->
+<!-- Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*.  -->
+
+
+# Prepare project
+
+
+# Data preparation
+```{r ThisIsOptional, eval = (params$eval_optional == "yes")}
+
+```
+
+
+
+Row {.tabset .tabset-fade}
+------------------
+### Plotting Section
+```{r Prepare Plots}
 ##' === === === === === === === === === === === === === === === === ====
 ##' 
 ##' # INIT ALL PLOTS (run first)  ####
@@ -72,8 +109,9 @@ scr_height <- system("wmic desktopmonitor get screenheight", intern=TRUE)[2] %>%
 
 ```
 
-## Plot (dygraphs) original Swissgrid Data
-```{r}
+
+### Plot (dygraphs) original Swissgrid Data
+```{r Plot dygraphs}
 ##' === === === === === === === === === === === === === === === === ===
 ##' 
 ##' .. 15min Swissgrid Data Interactive ####
@@ -117,12 +155,12 @@ for (Year in Years) {
                                ".html"))
 
   # source files to plot the dygraphs of electricity profiles
-  source("scripts/plot_ElectricityDat.R",encoding = "UTF-8")
+  source("./scripts/plot_ElectricityDat.R",encoding = "UTF-8", local = TRUE)
   dyg <- 
     dyg %>%   
     dyOptions(stackedGraph=T,stepPlot=T,drawGapEdgePoints = F,
               useDataTimezone=T,fillGraph = F,fillAlpha = 0.85,drawPoints = F)
-  if (addRangeSel) {source("scripts/plot_ElectricityDat_addRangeSelector.R",encoding = "UTF-8")} 
+  if (addRangeSel) {source("./scripts/plot_ElectricityDat_addRangeSelector.R",encoding = "UTF-8",local = TRUE)} 
   
   # Saving the plots individually in a hash file.
   # They can be 
@@ -159,6 +197,51 @@ if (SaveOutput) {
 
 
 
+
+
+Electricity Surplus Story {.storyboard}
+==========
+
+### PV potentials
+####this is the story
+```{r}
+
+```
+
+***
+Data is taken from renewable.ninjas.org
+
+Test
+
+### CO2 potentials
+```{r}
+
+```
+
+### Synthesis
+```{r}
+
+```
+
+### Plot as shiny
+```{r}
+shinyAppFile(
+  "C:/GIT_clones/GHub_SwissElectricityProfilesOnline/SwissElectricityProfiles/app.R",
+  options = list(height=850)
+)
+```
+
+### Heatmap plots of timedata
+```{r}
+# shinyAppFile(
+#   "C:/GIT_clones/EBM_Swissgrid_TimeSeriesAnalysis/shiny/app.R",
+#   options = list(height=850)
+# )
+```
+
+
+The Rest
+========
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
 
 When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).

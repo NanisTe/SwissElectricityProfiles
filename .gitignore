@@ -2,4 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
-packrat/lib*/
+Create_UUID.Rout
+local_package_library/*.tar
+local_package_library/**/*
+cache/**/*

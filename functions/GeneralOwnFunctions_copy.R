@@ -21,17 +21,22 @@ qq <- function (save="no", ...) {
 # ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
 
 # filterXts ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ###
-filterXts <- function(df, xtsstring, column = 1) {
-  dates.xts <- xts::xts(df[,1], order.by = df[[1]])
-  indices <- index(dates.xts[xtsstring])
+filterXts <- function(df, xtsstring, by_name = NULL) {
+  if(is.null(by_name)) by_name=names(df)[1]
+  # check if by_name is string and if it is part of colnames(df)
+  if(!is.element(by_name,colnames(df))) stop(paste0("Argument by_name= \"",by_name,"\" is not a column name of dataframe df."))
+  
+  dates.xts <- xts::xts(df[,by_name], order.by = df[[1]])
+  indices <- zoo::index(dates.xts[xtsstring])
   filtered <- data.frame(Col_1 = indices)
   
   #' Prepare a named character to be used in the by = statement in the join function. 
   #' Its name has to be the column name of the matching column from original
   #' 
-  join.column <- names(df)[1]
+  
+  #' Creating a named Vector for inner_join its by argument
   join.by <- "Col_1"
-  names(join.by) <- names(df)[1]
+  names(join.by) <- names(df[by_name])
   
   return(dplyr::inner_join(df, filtered, by = c(join.by)))
 }

@@ -1,0 +1,265 @@
+#'---
+#'title: "SWISSGRID DATA ANALYSIS"
+#'author: "Sinan Teske"
+#'output: flexdashboard::flex_dashboard
+#'runtime: shiny
+#'---
+
+#' other options for compilation/knitr of this document
+#
+#html_document
+#params:
+#  eval_optional: no
+
+#' Info
+#' =====
+#+ Load Project, include=TRUE,eval=T, hide=T
+cat("\014") # clear console
+project.load() # load project
+
+
+#' Report / Documentation / Code
+#' =====
+
+#' ## Project Setup
+
+#' In the following the project setup 
+#+ Load Functions and Data, include=TRUE, echo=TRUE
+
+# library("pacman")
+# .project.load.packages()
+source("./functions/OwnFunctions.R") # already loaded by .project.load
+
+if (F) { .project.load.cache("raw") }
+if (T) { .project.load.cache("analysed")}
+
+# munge data
+if (F) { source("./munge/Munge.R",encoding = "UTF-8",local = TRUE) }
+
+hash <- hash::hash
+
+EZ = "Europe/Zurich"
+
+
+# Has to be loaded after ElDat_ohneKKW dataset is available
+getElDatPV <- function(Anteil) {
+  ElDat_ohneKKW %>% 
+    left_join(df.PV.Pot.CH.final, by = "Datetime") %>% 
+    mutate(PV.GWh = PV.GWh * Anteil) %>% 
+    mutate(Prod_Total_ControlBlock = Prod_Total_ControlBlock + PV.GWh*1E06) %>%
+    select(-starts_with("Prod_Canton"),-starts_with("Cons_Canton")) %>%
+    ElDatPlot_Prepare()
+}
+
+
+
+
+#'Page
+#'====
+print("Page")
+#'####Page AREA
+print("plot long")
+#'####Noch eine AREA
+#'TEST
+#'----
+#'###TEST AREA
+print("plot half")
+print("test2a")
+#'TEST2
+#'----
+#'###TEST2 AREA
+print("plot half 2")
+print("test2b")
+#'####TEST3
+print("test3a")
+#'####TEST3
+print("test3b")
+
+
+#'#Page 1
+#'Row
+#'------------------
+#'This section explains calculation of the Swissgrid electrictiy profile data.
+#<!-- This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code.  -->
+#<!-- Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*.  -->
+
+
+#' ### Prepare project
+print("some code")
+
+#' ### Data preparation
+# params$eval_optional == "yes"
+
+# some code
+print("some code")
+
+#' Row {.tabset .tabset-fade}
+#' ------------------
+#' ### Plotting Section
+# <!--
+# === === === === === === === === === === === === === === === === ====
+#
+# # INIT ALL PLOTS (run first)  ####
+#
+# === === === === === === === === === === === === === === === === ===
+# -->
+SaveOutput <- F
+YvalueRange <- c(0,6000)
+addRangeSel <- F
+Lang <- "DE"
+
+# Defining Hash tables for storing the different plots, data, and strings for different language options
+FileNames <- hash::hash()
+PlotTitle <- hash::hash()
+XAxisTitle <- hash::hash()
+YAxisTitle <- hash::hash()
+
+
+Year <- "2010/2018"
+Years <- c(as.character(c(2010:2018)))
+# Years <- c(as.character(c(2010:2018)),"2010/2018")
+
+# Screen Width & Height for single screen
+scr_width <- system("wmic desktopmonitor get screenwidth", intern=TRUE)[2] %>% as.numeric(.)
+scr_height <- system("wmic desktopmonitor get screenheight", intern=TRUE)[2] %>% as.numeric(.)
+
+
+
+#' ### Plot (dygraphs) original Swissgrid Data
+#<--
+# === === === === === === === === === === === === === === === === ===
+#
+# .. 15min Swissgrid Data Interactive ####
+#
+# === === === === === === === === === === === === === === === === ===
+#-->
+##' Save Interactive DyGraph Plot
+##' Knitr und RMarkdown um eine HTML zu erzeugen
+
+SG.plots <- hash::hash()
+
+ElDat.Plots <- hash::hash()
+
+
+With2ndAxis <- F
+# SecondAxisOption:
+# 1: Consumption
+# 2: Prices
+SecondAxisOption <- 2
+WithGrouping <- F
+Grouping <- "G1"
+
+
+
+for (Year in Years) {
+  PlotData <- ElDat_with_Prices
+
+  # Define Plot Titles in diffrent languages.
+  # If variable Year is something similar to "2010/2016" gsub converts it to "2010 to 2016" in the title.
+  PlotTitle["DE"] <- enc2utf8(paste("Elektrizitäts Profil der Schweiz ",
+                                      gsub(pattern="/", x=Year,replacement=" bis ")))
+  PlotTitle["EN"] <- enc2utf8(paste("Swiss Electricity Profiles ",
+                                      gsub(pattern="/", x=Year,replacement=" to ")))
+
+  # Define file names for each plot in variable Years with which the plot will be saved on disk.
+  # Includes language dependencies.
+  FileName <- file.path(getwd(),
+                        "figures",
+                        paste0(Lang,"_SG_Data_",
+                               gsub(pattern="/", x=Year,replacement="_"), # needed if filter is e.g. "2010/2016"
+                               ifelse(With2ndAxis,"_2ndAxis",""),
+                               ".html"))
+
+  # source files to plot the dygraphs of electricity profiles
+  source("./scripts/plot_ElectricityDat.R",encoding = "UTF-8", local = TRUE)
+  dyg <-
+    dyg %>%
+    dyOptions(stackedGraph=T,stepPlot=T,drawGapEdgePoints = F,
+              useDataTimezone=T,fillGraph = F,fillAlpha = 0.85,drawPoints = F)
+  if (addRangeSel) {source("./scripts/plot_ElectricityDat_addRangeSelector.R",encoding = "UTF-8",local = TRUE)}
+
+  # Saving the plots individually in a hash file.
+  # They can be
+  SG.plots[Year] <- dyg
+  # print(dyg)
+
+  # For standard export procedure
+  ElDat.Plots[Year] <- dyg
+  FileNames[Year] <- FileName
+}
+
+if (SaveOutput) {
+  for (Year in Years) {
+    saveWidget(ElDat.Plots[[Year]], FileNames[[Year]],
+               selfcontained = TRUE, libdir = NULL,
+               background = "white", knitrOptions = list())
+
+    webshot(FileNames[[Year]], file = paste0(FileNames[[Year]],".png"),
+            cliprect = "viewport",
+            expand = c(-100, 200, 200, -100), #top, right, bottom, left
+            # selector = "canvas",
+            vwidth = scr_width,
+            vheight = scr_height,
+            # zoom=2.5,
+            eval = "casper.then(function() {
+            casper.zoom(4)
+  });"
+              )
+  }
+}
+
+
+
+#'# Electricity Surplus Story {.storyboard}
+
+
+#'### PV potentials
+
+dyg
+
+#'***
+#'####this is the story
+#some stuff
+print("this is the story")
+
+
+#'Data is taken from renewable.ninjas.org
+#'Test
+
+#'
+#'### CO2 potentials
+#'
+print("another story page")
+
+#'### Synthesis
+print("another story page")
+
+#'### Plot as shiny
+# shinyAppFile(
+#   "C:/GIT_clones/GHub_SwissElectricityProfilesOnline/SwissElectricityProfiles/app.R",
+#   options = list(height=850)
+# )
+
+
+#'### Heatmap plots of timedata
+print("a shiny app")
+ shinyAppFile(
+   "C:/GIT_clones/EBM_Swissgrid_TimeSeriesAnalysis/shiny/app.R",
+   options = list(height=850)
+ )
+
+
+
+# Test --------------------------------------------------------------------
+
+
+
+
+
+#'The Rest
+#'========
+#'Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+#'When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+#'The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.

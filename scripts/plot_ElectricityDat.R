@@ -1,4 +1,4 @@
-
+cat(stderr(),ls(),"\n")
 
 if(With2ndAxis){
   switch (SecondAxisOption,
